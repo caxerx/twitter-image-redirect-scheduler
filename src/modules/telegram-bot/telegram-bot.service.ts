@@ -42,7 +42,7 @@ export class TelegramBotService {
       if (remain >= 0) {
         await this.bot.telegram.sendMessage(
           feedbackUserId,
-          `Remain: ${remain}`,
+          `Sent! Remain: ${remain}`,
         );
       } else {
         await this.bot.telegram.sendMessage(
