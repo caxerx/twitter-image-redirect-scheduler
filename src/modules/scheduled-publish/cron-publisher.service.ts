@@ -12,7 +12,7 @@ export class CronPublisherService {
 
   logger = new Logger(CronPublisherService.name);
 
-  @Cron('* * */3 * * *')
+  @Cron('0 0 */3 * * *')
   handleCron() {
     const adminUser = this.config.get<string>('ADMIN_USER');
     this.telegramBot.publishScheduled(adminUser);
