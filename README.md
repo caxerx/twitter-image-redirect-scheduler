@@ -4,4 +4,7 @@ Schedule twitter image to telegram channel every 3 hours.
 
 ## TODO
 
-- Add a way to specify the path to the file
+- Show scheduled List
+- Send now
+- Send nth item
+- Add item that will not be sent automatically
