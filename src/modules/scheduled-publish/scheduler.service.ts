@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { GentleError } from 'src/models/GentleError';
 import { FileCacheService } from '../file-cache/file-cache.service';
@@ -16,12 +16,16 @@ export class SchedulerService {
     private fileCache: FileCacheService,
   ) {}
 
+  private logger = new Logger(SchedulerService.name);
+
   async schedule(record: Prisma.RecordCreateInput) {
     try {
       await this.recordService.createRecord(record);
     } catch (e) {
       if ('code' in e && e.code === 'P2002') {
         throw new GentleError('This tweet is already scheduled');
+      } else {
+        this.logger.error(e);
       }
       throw e;
     }
@@ -61,7 +65,8 @@ export class SchedulerService {
     try {
       const files = await this.fileCache.getImages(tweetId);
       await this.telegramBot.sendToChannel(tweet.url, files);
-    } catch {
+    } catch (e) {
+      this.logger.error(e);
       throw new GentleError('Failed to send tweet to telegram channel');
     }
 
