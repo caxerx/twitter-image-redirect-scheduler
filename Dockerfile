@@ -33,7 +33,7 @@ EXPOSE 3000
 
 CMD ["node" , "dist/main.js"]
 
-VOLUME ["/usr/src/app/images"]
+VOLUME ["/usr/src/app/files"]
 
 ENV DATABASE_URL=
 ENV TELEGRAM_BOT_TOKEN=
