@@ -4,6 +4,7 @@ import { Update, Ctx, Hears, Command } from 'nestjs-telegraf';
 import { removeUrlQuery } from 'src/utils/url';
 import { Context } from 'telegraf';
 import { TelegramBotService } from './telegram-bot.service';
+import { parseTweetId } from 'src/utils/twitter';
 
 @Update()
 export class TelegramBotUpdate {
@@ -37,5 +38,22 @@ export class TelegramBotUpdate {
       return;
     }
     await this.botService.publishScheduled(from);
+  }
+
+  @Command('delete')
+  async delete(@Ctx() ctx: Context) {
+    const from = ctx.message.from.id;
+    if (from !== +this.config.get<string>('ADMIN_USER')) {
+      return;
+    }
+
+    if ('text' in ctx.message) {
+      const tweetUrl = ctx.message.text.split(' ')[1];
+      if (/^https\:\/\/twitter\.com\/.*$/.test(tweetUrl)) {
+        const pureUrl = removeUrlQuery(tweetUrl);
+        const tweetId = parseTweetId(pureUrl);
+        await this.botService.deleteScheduled(tweetId, from);
+      }
+    }
   }
 }

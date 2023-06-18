@@ -25,7 +25,7 @@ export class SchedulerService {
       if ('code' in e && e.code === 'P2002') {
         throw new GentleError('This tweet is already scheduled');
       } else {
-        this.logger.error(e);
+        this.logger.error(e, e.stack);
       }
       throw e;
     }
@@ -63,14 +63,14 @@ export class SchedulerService {
     const tweetId = tweet.id;
 
     try {
-      const files = await this.fileCache.getImages(tweetId);
+      const files = await this.fileCache.getFiles(tweetId);
       await this.telegramBot.sendToChannel(tweet.url, files);
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error(e, e.stack);
       throw new GentleError('Failed to send tweet to telegram channel');
     }
 
-    const removeImagePromise = this.fileCache.removeImages(tweetId);
+    const removeImagePromise = this.fileCache.removeFiles(tweetId);
 
     const updateRecordPromise = this.recordService.updateRecord({
       where: {
