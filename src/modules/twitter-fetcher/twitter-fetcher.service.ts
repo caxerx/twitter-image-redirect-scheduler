@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GentleError } from 'src/models/GentleError';
 import { FileCacheService } from '../file-cache/file-cache.service';
-import { Scraper } from '@the-convocation/twitter-scraper';
+import { Scraper, Tweet } from '@the-convocation/twitter-scraper';
 import { BufferFile } from '../file-cache/file-cache.types';
 import * as fs from 'fs';
 import * as tough from 'tough-cookie';
@@ -10,7 +10,7 @@ import * as tough from 'tough-cookie';
 @Injectable()
 export class TwitterFetcherService {
   private scraper: Scraper;
-  // private lastRetweetedId: string;
+  private lastRetweetedId: string;
 
   constructor(
     private config: ConfigService,
@@ -43,9 +43,9 @@ export class TwitterFetcherService {
 
     if (await this.scraper.isLoggedIn()) {
       this.logger.log('Logged in successfully');
-      // setTimeout(() => {
-      //   this.logLastRetweets();
-      // }, 1000);
+      setTimeout(() => {
+        this.logLastRetweets();
+      }, 1000);
     } else {
       this.logger.error('Failed to login');
     }
@@ -53,39 +53,51 @@ export class TwitterFetcherService {
 
   private logger = new Logger(TwitterFetcherService.name);
 
-  // async logLastRetweets() {
-  //   const lastRetweet = this.scraper.getTweets(
-  //     this.config.get('TWITTER_RETWEET_TRACKER_USERNAME'),
-  //   );
+  async logLastRetweets() {
+    const lastRetweet = this.scraper.getTweets(
+      this.config.get('TWITTER_RETWEET_TRACKER_USERNAME'),
+    );
 
-  //   for await (const tweet of lastRetweet) {
-  //     console.log(tweet);
-  //     if (tweet.isRetweet) {
-  //       console.log(tweet);
-  //       this.lastRetweetedId = tweet.id;
-  //       break;
-  //     }
-  //   }
-  // }
+    for await (const tweet of lastRetweet) {
+      if (tweet.isRetweet) {
+        this.lastRetweetedId = tweet.id;
+        break;
+      }
+    }
 
-  // async *fetchLastRetweets() {
-  //   if (!this.lastRetweetedId) {
-  //     return;
-  //   }
-  //   const tweets = this.scraper.getTweets(
-  //     this.config.get('TWITTER_USERNAME'),
-  //     15,
-  //   );
-  //   for await (const tweet of tweets) {
-  //     if (tweet.isRetweet) {
-  //       if (tweet.id === this.lastRetweetedId) {
-  //         break;
-  //       }
-  //       this.lastRetweetedId = tweet.id;
-  //       yield tweet;
-  //     }
-  //   }
-  // }
+    this.logger.log(`Last retweeted id: ${this.lastRetweetedId}`);
+  }
+
+  async fetchLastRetweets() {
+    if (!this.lastRetweetedId) {
+      return [];
+    }
+
+    const tweets = this.scraper.getTweets(
+      this.config.get('TWITTER_RETWEET_TRACKER_USERNAME'),
+    );
+
+    let latestRetweet: string = null;
+    const tweetList: Tweet[] = [];
+
+    for await (const tweet of tweets) {
+      if (tweet.isRetweet) {
+        if (tweet.id === this.lastRetweetedId) {
+          break;
+        }
+
+        if (!latestRetweet) {
+          latestRetweet = tweet.id;
+        }
+
+        tweetList.push(tweet);
+      }
+    }
+
+    this.lastRetweetedId = latestRetweet ?? this.lastRetweetedId;
+
+    return tweetList;
+  }
 
   async getTweetImages(tweetId: string): Promise<string[]> {
     const tweet = await this.scraper.getTweet(tweetId);

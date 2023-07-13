@@ -20,14 +20,31 @@ export class CronPublisherService {
     this.telegramBot.publishScheduled(adminUser);
   }
 
-  // @Cron('0 */1 * * * *')
-  // async fetchThings() {
-  //   const tweets = this.twitterFetcher.fetchLastRetweets();
+  @Cron('0 */5 * * * *')
+  // @Cron('*/10 * * * * *')
+  async scheduleAllRetweeted() {
+    const adminUser = this.config.get<string>('ADMIN_USER');
 
-  //   for await (const tweet of tweets) {
-  //     console.log(tweet);
-  //   }
+    const tweets = await this.twitterFetcher.fetchLastRetweets();
 
-  //   console.log('Done');
-  // }
+    const scheduleJobs = tweets.map(async (tweet) => {
+      return this.telegramBot.scheduleUrl(tweet.permanentUrl, adminUser);
+    });
+
+    const scheduledJobsResult = await Promise.allSettled(scheduleJobs);
+
+    const failedJobs = scheduledJobsResult.filter(
+      (i) => i.status === 'rejected',
+    );
+
+    if (failedJobs.length > 0) {
+      this.logger.error(
+        `Failed to schedule ${failedJobs.length} jobs. ${JSON.stringify(
+          failedJobs,
+        )}`,
+      );
+    } else {
+      this.logger.log(`Scheduled ${tweets.length} jobs`);
+    }
+  }
 }
