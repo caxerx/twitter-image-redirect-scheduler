@@ -13,6 +13,7 @@ import { SchedulerService } from '../scheduled-publish/scheduler.service';
 import { BufferFile } from '../file-cache/file-cache.types';
 import { RecordService } from '../prisma/record.service';
 import { FileCacheService } from '../file-cache/file-cache.service';
+import { TwitterFetcherService } from '../twitter-fetcher/twitter-fetcher.service';
 
 @Injectable()
 export class TelegramBotService {
@@ -22,6 +23,7 @@ export class TelegramBotService {
     private scheduler: SchedulerService,
     private record: RecordService,
     private fileCache: FileCacheService,
+    private twitterFetcher: TwitterFetcherService,
   ) {}
 
   private logger = new Logger(TelegramBotService.name);
@@ -110,11 +112,18 @@ export class TelegramBotService {
 
   async scheduleUrl(pureTweetUrl: string, userId: string | number) {
     const tweetId = parseTweetId(pureTweetUrl);
+    const scraper = this.twitterFetcher.getRawScraper();
+    const tweet = await scraper.getTweet(tweetId);
+    const originalTweetId = tweet.isRetweet
+      ? tweet.retweetedStatus.id
+      : tweet.id;
 
     try {
       const count = await this.scheduler.schedule({
-        id: tweetId,
-        url: pureTweetUrl,
+        id: originalTweetId,
+        url: tweet.isRetweet
+          ? tweet.retweetedStatus.permanentUrl
+          : tweet.permanentUrl,
         type: RecordType.TWITTER,
       });
 

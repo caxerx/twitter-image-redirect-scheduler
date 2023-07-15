@@ -68,6 +68,10 @@ export class TwitterFetcherService {
     this.logger.log(`Last retweeted id: ${this.lastRetweetedId}`);
   }
 
+  getRawScraper() {
+    return this.scraper;
+  }
+
   async fetchLastRetweets() {
     if (!this.lastRetweetedId) {
       return [];
