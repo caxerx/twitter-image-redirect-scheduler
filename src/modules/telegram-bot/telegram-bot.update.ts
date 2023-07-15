@@ -28,7 +28,7 @@ export class TelegramBotUpdate {
     const messageText = ctx.message.text;
     const pureUrl = removeUrlQuery(messageText);
 
-    await this.botService.scheduleUrl(pureUrl, from);
+    await this.botService.scheduleTweetUrl(pureUrl, from);
   }
 
   @Command('send')

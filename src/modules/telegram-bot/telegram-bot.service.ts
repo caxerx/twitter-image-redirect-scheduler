@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectBot } from 'nestjs-telegraf';
 import { GentleError } from 'src/models/GentleError';
-import { parseTweetId } from 'src/utils/twitter';
 import { Context, Telegraf } from 'telegraf';
 import {
   InputMediaPhoto,
@@ -12,7 +11,9 @@ import { SchedulerService } from '../scheduled-publish/scheduler.service';
 import { BufferFile } from '../file-cache/file-cache.types';
 import { RecordService } from '../prisma/record.service';
 import { FileCacheService } from '../file-cache/file-cache.service';
+import { Tweet } from '@the-convocation/twitter-scraper';
 import { TwitterFetcherService } from '../twitter-fetcher/twitter-fetcher.service';
+import { parseTweetId } from 'src/utils/twitter';
 
 @Injectable()
 export class TelegramBotService {
@@ -109,11 +110,15 @@ export class TelegramBotService {
     }
   }
 
-  async scheduleUrl(pureTweetUrl: string, userId: string | number) {
-    const tweetId = parseTweetId(pureTweetUrl);
+  async scheduleTweetUrl(url: string, userId: string | number) {
     const scraper = this.twitterFetcher.getRawScraper();
+    const tweetId = parseTweetId(url);
     const tweet = await scraper.getTweet(tweetId);
 
+    this.scheduleTweet(tweet, userId);
+  }
+
+  async scheduleTweet(tweet: Tweet, userId: string | number) {
     try {
       const count = await this.scheduler.scheduleTweeterPost(
         tweet.isRetweet ? tweet.retweetedStatus : tweet,

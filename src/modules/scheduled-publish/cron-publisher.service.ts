@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { TelegramBotService } from '../telegram-bot/telegram-bot.service';
 import { TwitterFetcherService } from '../twitter-fetcher/twitter-fetcher.service';
+import { Tweet } from '@the-convocation/twitter-scraper';
 
 @Injectable()
 export class CronPublisherService {
@@ -20,22 +21,22 @@ export class CronPublisherService {
     this.telegramBot.publishScheduled(adminUser);
   }
 
-  @Cron('0 */5 * * * *')
-  // @Cron('*/10 * * * * *')
+  // @Cron('0 */5 * * * *')
+  @Cron('*/10 * * * * *')
   async scheduleAllRetweeted() {
     const adminUser = this.config.get<string>('ADMIN_USER');
 
     const tweets = await this.twitterFetcher.fetchLastRetweets();
 
-    const scheduleJobs = tweets.map(async (tweet) => {
-      return this.telegramBot.scheduleUrl(tweet.permanentUrl, adminUser);
-    });
+    const failedJobs: Tweet[] = [];
 
-    const scheduledJobsResult = await Promise.allSettled(scheduleJobs);
-
-    const failedJobs = scheduledJobsResult.filter(
-      (i) => i.status === 'rejected',
-    );
+    for (const tweet of tweets) {
+      try {
+        await this.telegramBot.scheduleTweet(tweet, adminUser);
+      } catch (e) {
+        failedJobs.push(tweet);
+      }
+    }
 
     if (failedJobs.length > 0) {
       this.logger.error(
