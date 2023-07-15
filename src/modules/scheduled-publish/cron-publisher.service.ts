@@ -21,8 +21,8 @@ export class CronPublisherService {
     this.telegramBot.publishScheduled(adminUser);
   }
 
-  // @Cron('0 */5 * * * *')
-  @Cron('*/10 * * * * *')
+  @Cron('0 */5 * * * *')
+  // @Cron('*/10 * * * * *')
   async scheduleAllRetweeted() {
     const adminUser = this.config.get<string>('ADMIN_USER');
 
