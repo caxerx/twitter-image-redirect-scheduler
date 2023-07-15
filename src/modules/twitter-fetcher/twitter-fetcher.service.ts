@@ -120,13 +120,14 @@ export class TwitterFetcherService {
 
   async cacheTweet(tweet: Tweet): Promise<void> {
     const tweetId = tweet.id;
+    const tweetUser = tweet.username;
 
     const imageUrls = await this.getTweetImages(tweet);
     const videoUrls = await this.getTweetVideos(tweet);
 
     if (imageUrls.length === 0 && videoUrls.length === 0) {
       throw new GentleError(
-        `No images or videos found for tweet: https://twitter.com/_/status/${tweetId}`,
+        `No images or videos found for tweet: https://twitter.com/${tweetUser}/status/${tweetId}`,
       );
     }
 
@@ -137,7 +138,7 @@ export class TwitterFetcherService {
       } catch (e) {
         this.logger.error(e, e.stack);
         throw new GentleError(
-          `Failed to fetch image for tweet: https://twitter.com/_/status/${tweetId}`,
+          `Failed to fetch image for tweet: https://twitter.com/${tweetUser}/status/${tweetId}`,
         );
       }
     });
@@ -149,7 +150,7 @@ export class TwitterFetcherService {
       } catch (e) {
         this.logger.error(e, e.stack);
         throw new GentleError(
-          `Failed to fetch video for tweet: https://twitter.com/_/status/${tweetId}`,
+          `Failed to fetch video for tweet: https://twitter.com/${tweetUser}/status/${tweetId}`,
         );
       }
     });
@@ -173,7 +174,7 @@ export class TwitterFetcherService {
     } catch (e) {
       this.logger.error(e, e.stack);
       throw new GentleError(
-        `Failed to write files for tweet: https://twitter.com/_/status/${tweetId}`,
+        `Failed to write files for tweet: https://twitter.com/${tweetUser}/status/${tweetId}`,
       );
     }
   }
