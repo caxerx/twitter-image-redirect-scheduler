@@ -1,10 +1,10 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { GentleError } from 'src/models/GentleError';
 import { FileCacheService } from '../file-cache/file-cache.service';
 import { RecordService } from '../prisma/record.service';
 import { TelegramBotService } from '../telegram-bot/telegram-bot.service';
 import { TwitterFetcherService } from '../twitter-fetcher/twitter-fetcher.service';
+import { Tweet } from '@the-convocation/twitter-scraper';
 
 @Injectable()
 export class SchedulerService {
@@ -18,9 +18,14 @@ export class SchedulerService {
 
   private logger = new Logger(SchedulerService.name);
 
-  async schedule(record: Prisma.RecordCreateInput) {
+  async scheduleTweeterPost(tweet: Tweet) {
     try {
-      await this.recordService.createRecord(record);
+      await this.recordService.createRecord({
+        id: tweet.id,
+        published: false,
+        url: `https://twitter.com/${tweet.username}/status/${tweet.id}`,
+        type: 'TWITTER',
+      });
     } catch (e) {
       if ('code' in e && e.code === 'P2002') {
         throw new GentleError('This tweet is already scheduled');
@@ -31,10 +36,10 @@ export class SchedulerService {
     }
 
     try {
-      await this.twitterFetcher.fetchAndCacheTweet(record.id);
+      await this.twitterFetcher.cacheTweet(tweet);
     } catch (e) {
       await this.recordService.deleteRecord({
-        id: record.id,
+        id: tweet.id,
       });
       throw e;
     }

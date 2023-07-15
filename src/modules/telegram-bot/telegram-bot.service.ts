@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { RecordType } from '@prisma/client';
 import { InjectBot } from 'nestjs-telegraf';
 import { GentleError } from 'src/models/GentleError';
 import { parseTweetId } from 'src/utils/twitter';
@@ -114,18 +113,11 @@ export class TelegramBotService {
     const tweetId = parseTweetId(pureTweetUrl);
     const scraper = this.twitterFetcher.getRawScraper();
     const tweet = await scraper.getTweet(tweetId);
-    const originalTweetId = tweet.isRetweet
-      ? tweet.retweetedStatus.id
-      : tweet.id;
 
     try {
-      const count = await this.scheduler.schedule({
-        id: originalTweetId,
-        url: tweet.isRetweet
-          ? tweet.retweetedStatus.permanentUrl
-          : tweet.permanentUrl,
-        type: RecordType.TWITTER,
-      });
+      const count = await this.scheduler.scheduleTweeterPost(
+        tweet.isRetweet ? tweet.retweetedStatus : tweet,
+      );
 
       await this.bot.telegram.sendMessage(
         userId,

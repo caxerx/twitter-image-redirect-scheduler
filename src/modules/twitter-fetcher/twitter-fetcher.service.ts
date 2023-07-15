@@ -103,9 +103,7 @@ export class TwitterFetcherService {
     return tweetList;
   }
 
-  async getTweetImages(tweetId: string): Promise<string[]> {
-    const tweet = await this.scraper.getTweet(tweetId);
-
+  async getTweetImages(tweet: Tweet): Promise<string[]> {
     if (tweet.photos?.length <= 0) {
       return [];
     }
@@ -113,18 +111,18 @@ export class TwitterFetcherService {
     return tweet.photos.map((i) => i.url);
   }
 
-  async getTweetVideos(tweetId: string): Promise<string[]> {
-    const tweet = await this.scraper.getTweet(tweetId);
-
+  async getTweetVideos(tweet: Tweet): Promise<string[]> {
     if (tweet.videos?.length <= 0) {
       return [];
     }
     return tweet.videos.map((i) => i.url);
   }
 
-  async fetchAndCacheTweet(tweetId: string): Promise<void> {
-    const imageUrls = await this.getTweetImages(tweetId);
-    const videoUrls = await this.getTweetVideos(tweetId);
+  async cacheTweet(tweet: Tweet): Promise<void> {
+    const tweetId = tweet.id;
+
+    const imageUrls = await this.getTweetImages(tweet);
+    const videoUrls = await this.getTweetVideos(tweet);
 
     if (imageUrls.length === 0 && videoUrls.length === 0) {
       throw new GentleError(

@@ -43,7 +43,7 @@ export class CronPublisherService {
           failedJobs,
         )}`,
       );
-    } else {
+    } else if (tweets.length > 0) {
       this.logger.log(`Scheduled ${tweets.length} jobs`);
     }
   }
