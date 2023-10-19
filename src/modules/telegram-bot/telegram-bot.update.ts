@@ -14,7 +14,7 @@ export class TelegramBotUpdate {
     private config: ConfigService,
   ) {}
 
-  @Hears(/^https\:\/\/twitter\.com\/.*$/)
+  @Hears(/^https\:\/\/(?:twitter|x)\.com\/.*$/)
   async hears(@Ctx() ctx: Context) {
     if (!('text' in ctx.message)) {
       return;
@@ -49,7 +49,7 @@ export class TelegramBotUpdate {
 
     if ('text' in ctx.message) {
       const tweetUrl = ctx.message.text.split(' ')[1];
-      if (/^https\:\/\/twitter\.com\/.*$/.test(tweetUrl)) {
+      if (/^https\:\/\/(?:twitter|x)\.com\/.*$/.test(tweetUrl)) {
         const pureUrl = removeUrlQuery(tweetUrl);
         const tweetId = parseTweetId(pureUrl);
         await this.botService.deleteScheduled(tweetId, from);

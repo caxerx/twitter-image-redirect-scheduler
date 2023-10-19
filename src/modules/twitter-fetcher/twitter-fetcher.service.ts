@@ -127,7 +127,7 @@ export class TwitterFetcherService {
 
     if (imageUrls.length === 0 && videoUrls.length === 0) {
       throw new GentleError(
-        `No images or videos found for tweet: https://twitter.com/${tweetUser}/status/${tweetId}`,
+        `No images or videos found for tweet: https://x.com/${tweetUser}/status/${tweetId}`,
       );
     }
 
@@ -138,7 +138,7 @@ export class TwitterFetcherService {
       } catch (e) {
         this.logger.error(e, e.stack);
         throw new GentleError(
-          `Failed to fetch image for tweet: https://twitter.com/${tweetUser}/status/${tweetId}`,
+          `Failed to fetch image for tweet: https://x.com/${tweetUser}/status/${tweetId}`,
         );
       }
     });
@@ -150,7 +150,7 @@ export class TwitterFetcherService {
       } catch (e) {
         this.logger.error(e, e.stack);
         throw new GentleError(
-          `Failed to fetch video for tweet: https://twitter.com/${tweetUser}/status/${tweetId}`,
+          `Failed to fetch video for tweet: https://x.com/${tweetUser}/status/${tweetId}`,
         );
       }
     });
@@ -174,7 +174,7 @@ export class TwitterFetcherService {
     } catch (e) {
       this.logger.error(e, e.stack);
       throw new GentleError(
-        `Failed to write files for tweet: https://twitter.com/${tweetUser}/status/${tweetId}`,
+        `Failed to write files for tweet: https://x.com/${tweetUser}/status/${tweetId}`,
       );
     }
   }

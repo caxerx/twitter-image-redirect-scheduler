@@ -23,7 +23,7 @@ export class SchedulerService {
       await this.recordService.createRecord({
         id: tweet.id,
         published: false,
-        url: `https://twitter.com/${tweet.username}/status/${tweet.id}`,
+        url: `https://x.com/${tweet.username}/status/${tweet.id}`,
         type: 'TWITTER',
       });
     } catch (e) {
